@@ -1,0 +1,48 @@
+https://rominirani.com/docker-swarm-tutorial-b67470cf8872
+
+1. docker swarm init --advertise-addr <server ip>
+
+		docker swarm join --token SWMTKN-1-3tcroz42ihzwl4r440itpw9rysew1r86f27hacz9un3k617twh-5u9lkmcuf8e5ase4px26nhoe6 192.168.253.25:2377
+
+	To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+
+
+2. docker node ls
+
+3. Add worker nodes 
+	docker swarm join --token .....
+	
+4. Add manager nodes
+	
+	docker swarm join-token manager
+		Returns something like
+		docker swarm join --token SWMTKN-1-3tcroz42ihzwl4r440itpw9rysew1r86f27hacz9un3k617twh-6ys582ayzlbmpk45p18y8x2um 192.168.253.25:2377
+		 
+5. Create a service.
+	docker service create -p 80:80 --name webserver nginx
+	
+	docker service ls
+
+6. docker service ps webserver
+
+7. Create multiple instance of a service
+	docker service create --replicas 5 --name web nginx
+	-p may fail unless you have 5 nodes to run containers
+	
+8. Scale out/in a service
+	docker service scale webserver=2 (do this based on how many nodes you have)
+
+9. Remove service
+	remove webserver
+	docker service rm webserver
+	
+	remove web
+	docker service rm web
+	
+10. Docker node can leave the cluster 
+		docker swarm leave --force #On the node which has to be removed.
+		docker node ls
+			status : Down
+		docker node rm <node id> #Node id can be got from docker node ls command.
+	
+11. 
