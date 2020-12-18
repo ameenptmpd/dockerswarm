@@ -1,0 +1,291 @@
+https://medium.com/aeturnuminc/configure-prometheus-and-grafana-in-dockers-ff2a2b51aa1d
+
+https://prometheus.io/docs/guides/dockerswarm/
+
+using compose
+https://dzone.com/articles/monitoring-docker-swarm
+
+Best using stack.
+https://blog.ruanbekker.com/blog/2019/09/05/deploy-a-monitoring-stack-on-docker-swarm-with-grafana-and-prometheus/	
+
+
+-------------------
+/etc/docker/daemon.json
+
+{
+  "metrics-addr" : "127.0.0.1:9323",
+  "experimental" : true
+}
+
+or 
+
+{
+  "metrics-addr" : "0.0.0.0:9323",
+  "experimental" : true
+}
+
+systemctl restart docker
+systemctl status docker
+
+http://<ip:9323>/metrics
+	would show lot of metrics
+
+
+-------------------
+
+Prometheus
+----------
+Monitoring solution collects metrics from several targets.
+
+Grafana
+-------
+Open source solution for running data analytics.
+Can pull metrics 
+Present it in customizable dashboards.
+Grafana can connect with many possible data source
+	Prometheus
+	Graphite
+	Influx DB
+	Elastic Search
+	MySQL
+	PostgreSQL
+Supports other plugin for connecting to other data sources.
+Supports Time Series analytics based
+	study
+	analysis
+	monitor 
+	
+Grafana + Prometheus can be easily integrated to Docker Swarm.
+
+
+Node Exporter
+-------------
+Docker image provided by prometheus to expose metrics like
+	disk
+	memory
+	network 
+
+Besides some special volumes and command definitions
+	this service is always placed on a specific node.
+	
+	
+	
+-------------------------------------------
+https://prometheus.io/docs/prometheus/latest/getting_started/
+https://www.fosslinux.com/10398/how-to-install-and-configure-prometheus-on-centos-7.htm
+
+sudo su
+yum update -y
+
+vi /etc/sysconfig/selinux
+Change “SELINUX=enforcing” to “SELINUX=disabled”.
+
+reboot
+
+sudo su
+yum install wget -y
+
+go to https://prometheus.io/download/ 
+find the link to download like below
+https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz
+
+wget https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz
+
+
+Add a Prometheus user.
+
+	useradd --no-create-home --shell /bin/false prometheus
+
+Create needed directories.
+
+	mkdir /etc/prometheus
+	mkdir /var/lib/prometheus
+
+Change the owner of the above directories.
+
+chown prometheus:prometheus /etc/prometheus
+chown prometheus:prometheus /var/lib/prometheus
+
+
+Now go to Prometheus downloaded location and extract it.
+	tar -xvzf prometheus-2.23.0.linux-amd64.tar.gz
+ 
+Rename it as per your preference.
+	mv prometheus-2.23.0.linux-amd64 prometheuspackage
+
+	Copy “prometheus” and “promtool” binary from the “prometheuspackage” folder to “/usr/local/bin”.
+
+	cp prometheuspackage/prometheus /usr/local/bin/
+	cp prometheuspackage/promtool /usr/local/bin/
+
+Change the ownership to Prometheus user.
+
+	chown prometheus:prometheus /usr/local/bin/prometheus
+	chown prometheus:prometheus /usr/local/bin/promtool
+
+Copy “consoles” and “console_libraries” directories from the “prometheuspackage” to “/etc/prometheus folder”
+	cp -r prometheuspackage/consoles /etc/prometheus
+	cp -r prometheuspackage/console_libraries /etc/prometheus
+
+Change the ownership to Prometheus user
+	chown -R prometheus:prometheus /etc/prometheus/consoles
+	chown -R prometheus:prometheus /etc/prometheus/console_libraries
+
+Add and modify Prometheus configuration file.
+
+Configurations should be added to the  “/etc/prometheus/prometheus.yml”
+
+Add
+-------------------
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: 'prometheus_master'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+----------------
+-----------------------
+Change the ownership of the file.
+	chown prometheus:prometheus /etc/prometheus/prometheus.yml
+	
+	
+Configure the Prometheus Service File.
+
+vi /etc/systemd/system/prometheus.service	
+
+---------------------------------------
+
+[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+ExecStart=/usr/local/bin/prometheus \
+--config.file /etc/prometheus/prometheus.yml \
+--storage.tsdb.path /var/lib/prometheus/ \
+--web.console.templates=/etc/prometheus/consoles \
+--web.console.libraries=/etc/prometheus/console_libraries
+
+[Install]
+WantedBy=multi-user.target
+---------------------------------------
+
+Save and the exit file.
+
+	Reload the systemd service.
+		systemctl daemon-reload
+
+Start the Prometheus service.
+	systemctl start prometheus
+	systemctl enable prometheus
+	systemctl status prometheus
+Check service status.
+
+	systemctl status prometheus
+
+
+	http://ip:9090/
+
+If required
+Add firewall rules.
+
+firewall-cmd --zone=public --add-port=9090/tcp --permanent
+systemctl reload firewalld
+
+Reference: https://www.fosslinux.com/10398/how-to-install-and-configure-prometheus-on-centos-7.htm
+--------------------------------------------
+Reference:
+https://www.youtube.com/watch?v=hEa_QbFlNnM&list=PLLYW3zEOaqlKhRCWqFE7iLRSh3XEFP5gj
+https://www.youtube.com/watch?v=CCi957AnSfc&t=4s
+https://www.youtube.com/watch?v=4WWW2ZLEg74
+https://www.youtube.com/watch?v=Q_tmu5Wte9E
+https://www.youtube.com/watch?v=JYwu0ph4a2E
+https://github.com/imixs/imixs-cloud/tree/master/management/monitoring
+
+
+----------------------------------------------------------------------------------------------
+https://www.fosslinux.com/8328/how-to-install-and-configure-grafana-on-centos-7.htm
+
+vi /etc/yum.repos.d/grafana.repo
+
+------------------------------------------
+[grafana]
+name=grafana
+baseurl=https://packages.grafana.com/oss/rpm
+repo_gpgcheck=1
+enabled=1
+gpgcheck=1
+gpgkey=https://packages.grafana.com/gpg.key
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+-------------------------------------------
+
+	sudo yum install grafana
+
+
+Skipped installing following fonts
+
+	yum install fontconfig
+	yum install freetype*
+	yum install urw-fonts
+	
+systemctl start grafana-server
+systemctl enable grafana-server.service	
+
+systemctl status grafana-server
+
+	Refer Contentxt for the rest.
+	http://ip:3000/
+	admin/admin
+	
+	
+	Confirm that you updated /etc/docker/daemon.json
+	Restart docker
+	
+	http://ip:9323/metrics
+	
+---------------------------
+vi prometheus.yml
+
+  - job_name: 'docker-master-monitoring'
+    static_configs:
+    - targets: ['localhost:9323']
+---------------------------------------	
+N.B: Instead of localhost if address is mentioned it should be like 123.123.123.123 (without protocol)
+
+	systemctl stop prometheus
+	./prometheus
+	
+	Refresh http://ip:9090/targets
+	There should be a second entry 
+		Both should become "UP"
+		
+		
+Copy a query from http://IP:9323/metrics like
+
+engine_daemon_container_states_containers{state="stopped"}
+Click on Prometheus link left most area
+paste the query and execute the result should be same.
+
+Click on graph.
+
+Go to grafana http://ip:3000/
+admin/admin
+
+Link datasource
+Create - new - dashboard - new query
+add the query from metrics server
+
+For e.g. 
+go_gc_duration_seconds{quantile="0.75"}
+	or 
+engine_daemon_container_states_containers{state="stopped"}
+
+Click on back link 
+Save it 	

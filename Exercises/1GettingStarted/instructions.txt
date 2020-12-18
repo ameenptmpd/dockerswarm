@@ -1,29 +1,67 @@
-https://rominirani.com/docker-swarm-tutorial-b67470cf8872
+
+Create 2/3 instances like and install docker in it.
+	Install Docker 
+
+		$ curl -fsSL https://get.docker.com -o get-docker.sh
+		$ sudo sh get-docker.sh
+		sudo su
+		sudo usermod -aG docker your-user
+		systemctl start docker
+		systemctl enable docker 
+		systemctl status docker
+
+---------------------------------------------------------
+Following ports needs to be open.
+	Open protocols and ports between the hosts
+	The following ports must be available. On some systems, these ports are open by default.
+
+	TCP port 2377 for cluster management communications
+	TCP and UDP port 7946 for communication among nodes
+	UDP port 4789 for overlay network traffic
+	If you plan on creating an overlay network with encryption (--opt encrypted), you also need to ensure ip protocol 50 (ESP) traffic is allowed.
+-----------------------------------------------------------------
 
 1. docker swarm init --advertise-addr <server ip>
-
+	e.g. docker swarm init --advertise-addr 192.168.253.13
+	
+		
 		docker swarm join --token SWMTKN-1-3tcroz42ihzwl4r440itpw9rysew1r86f27hacz9un3k617twh-5u9lkmcuf8e5ase4px26nhoe6 192.168.253.25:2377
 
 	To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
 
 
 2. docker node ls
+	docker info #on manager
+
 
 3. Add worker nodes 
 	docker swarm join --token .....
 	
 4. Add manager nodes
 	
+	docker swarm init - gives reference of how to generate the manager token
+
+	
 	docker swarm join-token manager
+
 		Returns something like
 		docker swarm join --token SWMTKN-1-3tcroz42ihzwl4r440itpw9rysew1r86f27hacz9un3k617twh-6ys582ayzlbmpk45p18y8x2um 192.168.253.25:2377
-		 
+	
+Execute the following on the master node.	
 5. Create a service.
 	docker service create -p 80:80 --name webserver nginx
 	
 	docker service ls
 
 6. docker service ps webserver
+	Will show the list of tasks (These are not containers)
+	The first (ID) field there is Task ID and different from service id or container id.
+	
+	docker inspect <task id>
+	Shows the details of the task.
+
+	If your container was created with port mapping (-p 80:80), then your container would be a part of subnet and gateway. It would by default connect to the overlay network.
+	
 
 7. Create multiple instance of a service
 	docker service create --replicas 5 --name web nginx
@@ -31,6 +69,8 @@ https://rominirani.com/docker-swarm-tutorial-b67470cf8872
 	
 8. Scale out/in a service
 	docker service scale webserver=2 (do this based on how many nodes you have)
+
+
 
 9. Remove service
 	remove webserver
@@ -44,5 +84,38 @@ https://rominirani.com/docker-swarm-tutorial-b67470cf8872
 		docker node ls
 			status : Down
 		docker node rm <node id> #Node id can be got from docker node ls command.
-	
-11. 
+
+-------------------------------------------------------------------------
+Advanced docker commands	
+-------------------------------------------------------------------------	
+11. Create a service with nginx image
+
+    $ docker service create nginx
+
+Create nginx service with a name
+  
+    $ docker service create --name my_web nginx
+    
+List services:
+
+    $ docker service ls
+
+Login to a private registry 
+
+    $ docker login registry.example.com
+    $ docker service  create   --with-registry-auth   --name my_service registry.example.com/acme/my_image:latest
+
+Update a service 
+
+    $ docker service update --publish-add 80 my_service      ## Adding a port 80 with the service for outside world
+
+Create a service with various options 
+
+    $ docker service create --name  myname   --env MYVAR=myvalue   --workdir /tmp   --user my_user   alpine ping docker.com
+
+Create a service with 3 containers with port forwarding 
+
+    $ docker service create --name my_web --replicas 3 --publish published=8080, target=80 nginx
+
+
+------------------------- 

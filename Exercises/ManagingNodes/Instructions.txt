@@ -1,0 +1,39 @@
+1. docker node ls
+	Status
+		Blank : Worker node
+		Leader: Manager Node(Primary)
+			Multiple leaders not supported.
+		Reachable: Candidate to become leader node (promote)
+			Active/Passive.
+			Passive node among active passive managers.
+			If leader becomes unavailable, then this will be promoted.
+			If there are multiple Reachable, then one among them will be randomnly picked up.
+		Unavailable: Manager node that cannot communicate with other nodes
+			If active leader becomes unavailable.
+		Drain: Do not assign/create container
+
+
+docker node ls
+	
+2. Promote one of the worker node as manager
+
+	docker node inspect --pretty <node>
+	
+	docker node promote <hostname from docker node ls>
+	
+	docker node ls
+		This node would now be promoted to Reachable.
+		
+	In real production have atleast 3 managers.
+	
+	
+3. 	
+	docker node demote <Node>
+	
+
+4. docker node update --availability drain <Node>
+
+5. docker node update --availability active <Node>
+
+N.B: drain strategy can be used for Converting Docker Manager like Kubernetes Manager
+		which doesn't entertain normal containers.

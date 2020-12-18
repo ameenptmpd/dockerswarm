@@ -1,0 +1,337 @@
+
+Docker swarm
+	o	Swarm Introduction
+----------------------------------------------------------------------------------------------------
+Docker Swarm
+	Orchestration tool
+	Technique where we join multiple docker engines running on different hosts 
+		use them as a cluster
+	
+	Service
+	-------
+		Declare a container as a service.
+		Create containers in respective machine.
+			This is called task.
+		When we create a service, 
+			you define its optimal/desired state 
+				number of replicas
+				network 
+				storage resources available to it
+				ports the service exposes to the outside world
+				ect. 
+		Docker works to maintain that desired state
+			For e.g. 
+				a worker node becomes unavailable
+				Docker schedules that node’s tasks on other nodes. 
+				Declare a container as a service.
+		Create containers in respective machine.
+			This is called task.	
+					definition of the tasks to execute on the manager or worker nodes. 
+			Central structure of the swarm system 
+			Primary root of user interaction with the swarm.
+
+			When we create a service, we specify 
+				which container image to use or
+				from where to build
+				which commands to execute inside running containers.
+
+			
+	Task 
+	----
+		Carries/Represents a docker container and the commands to run inside a container
+			Once a task is assigned to a node it cannot move to another node.
+			It can run on the assigned node or may fail.
+		Then why task?
+			Docker Manager works with a task to manage a container on a node.
+		Task is a running container 
+		Part of a swarm service 
+		managed by a swarm manager
+		N.B: A standalone container is not managed by Swarm Manager.
+		Carries a docker container and the commands to run inside a container
+			Once a task is assigned to a node it cannot move to another node.
+			It can run on the assigned node or may fail.
+		A task 
+			Carries a Docker container and 
+				commands to run inside the container. 
+			It is the atomic scheduling unit of swarm. 
+			Manager nodes assign tasks to worker nodes according 
+				to the number of replicas set in the service scale. 
+			Once a task is assigned to a node, 
+				it cannot move to another node. 
+				It can only run on the assigned node or fail.
+
+
+			
+
+	Manager Nodes
+	--------------
+		Machine we communicate with
+		Work is assigned to other nodes.
+		Default: In Docker Manager Nodes can also host containers.
+		Manager nodes handle cluster management tasks
+			maintaing cluster state
+			scheduling services
+			serving swarm mode HTTP API endpoints
+			managers maintain consistent state of the swarm and services running on it.
+			
+	Worker nodes
+		Containers are generally executed here.
+		
+
+Advantages of Docker Swarm
+	Cluster management integrated with Docker Engine: 
+		Use the Docker Engine CLI to create a swarm of Docker Engines 
+			deploy application services into Swarm nodes. 
+		Simple docker can be converted to docker swarm
+		No need for additional orchestration.		
+	
+	Decentralized design: 
+		Instead of handling differentiation between node roles at deployment time (when you create)
+		Docker Engine handles any specialization at runtime. 
+			Convert any worker to manager node.
+		Deploy both kinds of nodes(managers and workers) from the same Docker instance. 
+	
+	Declarative service model: 
+		Docker Engine uses a declarative approach 
+		we define the desired state of the service 
+		For example
+			describe an application comprised of web front end service and database backend.
+
+	Scaling: 
+		For each service, we can declare the number of tasks you want to run. 
+		When you scale out or in, 
+			swarm manager automatically adds or remove tasks to maintain the desired state.
+
+	Desired state reconciliation: 
+		Swarm manager constantly monitors the cluster state 
+		Reconciles any differences between the actual state and desired state. 
+		For example, if a node crashes. 
+			Swarm manager assigns the new replicas to workers that are running and available.
+
+	Multi-host networking: 
+		You can specify an overlay network for your services. 
+		The swarm manager automatically assigns addresses to the containers on the overlay network 
+			when it initializes or updates the application.
+
+	Service discovery: 
+		Swarm manager assign each service in the swarm a unique DNS name 
+		load balances running containers. 
+		You can query every container running in the swarm through a DNS server embedded in the swarm.
+
+	(Auto)Load balancing: 
+		You can expose the ports for services to an external load balancer. 
+		Internally, the swarm lets you specify how to distribute service containers between nodes.
+
+	(Hihgly)Secure by default: 
+		Each node in the swarm enforces TLS mutual authentication and encryption to secure communications between itself and all other nodes. You have the option to use self-signed root certificates or certificates from a custom root CA.
+
+	Rolling updates: 
+		At rollout time you can apply service updates to nodes incrementally. The swarm manager lets you control the delay between service deployment to different sets of nodes. If anything goes wrong, you can roll back to a previous version of the service.	
+
+	Roll-back a task: 
+		Swarm allows you to roll back environments to previous safe environments	
+
+
+	
+	
+	
+	
+Swarm mode key concepts
+-----------------------
+	
+	What is a swarm?
+	
+		cluster management and orchestration are features embedded in the Docker Engine 
+		Built using swarmkit. 
+		Swarmkit 
+			Separate project 
+			Implements Docker’s orchestration layer 
+			Available directly within Docker.
+
+		Swarm 
+			consists of multiple Docker hosts 
+			run in swarm mode 
+			Includes 
+				managers 
+					manage membership and delegation
+				workers 
+					which run swarm services. 
+			
+		Docker host can be 
+			manager or 
+			worker or 
+			perform both roles. 
+			
+		
+		While updating configuration Docker will 
+			update the configuration
+			stop the service tasks with the out of date configuration, and 
+			create new ones matching the desired configuration.
+
+		When Docker is running in swarm mode
+			we can still run 
+				standalone containers on any of the Docker hosts 
+					participating in the swarm, 
+				as well as swarm services. 
+		
+		A key difference between standalone containers and swarm services is 
+			only swarm managers can manage a swarm
+			standalone containers can be started on any daemon. 
+			Docker daemons can participate in a swarm as 
+				managers, 
+				workers, or 
+				both.
+
+			
+	Nodes
+	-----
+		A node is an instance of the Docker engine 
+			participating in the swarm. 
+		Also calle Docker node. 
+		Production swarm deployments typically include 
+			Docker nodes distributed across 
+				multiple physical and 
+				cloud machines.
+
+		To deploy your application to a swarm, 
+			we submit a service definition to a manager node. 
+		The manager node dispatches units of work called tasks to worker nodes.
+
+		Manager nodes also perform the 
+			orchestration and 
+			cluster management functions 
+		required to maintain the desired state of the swarm. 
+		Manager nodes elect a single leader to conduct orchestration tasks.
+
+		Worker nodes receive and execute tasks dispatched from manager nodes. 
+		Default manager nodes also run services as worker nodes
+		To configure manager nodes to run only management tasks 
+			Drain the master node.
+			
+		An agent 
+			runs on each worker node  
+			reports on the tasks assigned to it. 
+		The worker node 
+			notifies the manager node 
+				about current state of its assigned tasks 
+				manager maintain the desired state of each worker.
+	
+
+	Replicated Mode and Global Mode
+		Docker supports two different Mode
+			Replicated
+				Default mode (we did till now)
+				One or more replicas are created.
+				One is the default.
+				
+			Global 
+				Swarm runs one task for the service on every available node in the cluster.
+				[Similar to daemonset in kubernetes
+				No pre-specified number of Nodes.
+				Every new node added also will have this service running.
+		
+				docker service create -p 80:80 --name web --mode global nginx]
+
+	
+	Load balancing
+	
+		The swarm manager uses ingress load balancing 
+			expose the services you want to make available externally to the swarm. 
+		The swarm manager can 
+			automatically assign the service a PublishedPort 
+			or you can configure a PublishedPort for the service. 
+			
+		You can specify any unused port. 
+		If you do not specify a port, 
+			swarm manager assigns the service a port in the 30000-32767 range.
+
+		External components, 
+			such as cloud load balancers, 
+			can access the service on the PublishedPort of any node 
+				in the cluster whether or not the node is currently running the task for the service. All nodes in the swarm route ingress connections to a running task instance.
+
+		Swarm mode has an internal DNS component 
+			automatically assigns each service in the swarm a DNS entry. 
+			The swarm manager uses internal load balancing 
+				to distribute requests among services within the cluster 
+					based upon the DNS name of the service.	
+	
+	
+	
+	
+	Please refer to "Exercises" folder.
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	Stack
+	-----
+	A group of interrelated services that share dependencies
+	Can be orechstrated and scaled together.
+	
+	A single stack is capable of defining and coordinating functionality of an entire application.
+	Use docker-compose.yaml of version 3.0 to define the stack and swarm to run on multiple machines.
+	
+	
+	
+	cd $dockerswarm\Exercises\4ProduceConsumerStack
+	
+	docker stack deploy -c docker-compose.yml <stackName>
+	docker stack ls
+	docker stack ps
+	docker stack services <stackName>
+	docker stack rm <stackName>
+	
+	
+	Service Discovery and Load Balancing
+	------------------------------------
+	Swarm Manager 
+		uses ingress load balancing
+			to expose services outside swarm.
+		Uses round robin algorithem by default for LB.
+	
+	docker service create -p 80:80 --name web nginx	
+	
+	while we have a single instance, we should be able to reach it using any node.
+	So by default it creates something like NodePort. Here we call it the swarm mode.
+	
+	Docker container still continues to connect to bridge.
+	However there is an overlay network on top of that.
+	
+	
+	Docker Config
+	-------------
+	Need to seperate configuration files out of the image.
+	
+	When you grant a newly created or running service access to a config, the config is mounted as a file in the container.
+	The location of the mount with the container defaults to 
+		linux 
+			/config-name 
+		windows
+			C:\ProgramData\Docker\configs
+			
+		We can explicitly define the location using the target option
+	
+			echo "Docker Training" > sample.conf
+			
+			docker config create <configname> <file>
+			docker config create testconfig sample.conf
+			docker config ls
+			
+
+			docker service create --name testservice --config src=testconfig,target=/var/www/colors.html -p 80:80 httpd
+			docker service create --name testservice --config src=testconfig,target=/var/www/sample.conf -p 80:80 httpd
+			
+	
+		go to the machine 
+		docker ps
+		docker exec -it <container> bash
+		cat /var/www/sample.conf 
+			should print Docker Training
+
+

@@ -1,0 +1,23 @@
+
+Rolling update
+	While updating a service, 
+		we can define 
+		how many tasks should be updated at a time.
+		what should be done if the new tasks start failing.
+	
+
+docker service create --name webserver nginx:1.9.1
+
+On a different tab
+watch -n 1 docker service ps webserver
+
+docker service update --image <image> <service>
+docker service update --image nginx:1.19 webserver
+
+
+docker service update --replicas=<number> <service
+
+docker service update --rollback <service>
+docker service update --rollback webserver
+
+docker service update --update-failure-action=rollback <service>
