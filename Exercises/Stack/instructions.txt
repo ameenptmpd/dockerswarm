@@ -1,0 +1,5 @@
+docker stack deploy -c docker-compose.yml nginxtest
+
+docker stack ls 
+
+docker stack rm nginxtest
