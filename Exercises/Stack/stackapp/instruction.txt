@@ -1,0 +1,13 @@
+docker stack deploy --compose-file docker-stack.yml vote
+
+This includes 
+	vote container based on a Python image
+result container based on a Node.js image
+redis container based on a redis image, to temporarily store the data.
+.NET based worker app based on a .NET image
+Postgres container based on a postgres image
+
+to verify your stack has deployed, use docker stack services vote
+docker stack services vote
+
+

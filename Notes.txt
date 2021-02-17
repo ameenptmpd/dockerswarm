@@ -10,8 +10,9 @@ Docker Swarm
 	Service
 	-------
 		Declare a container as a service.
-		Create containers in respective machine.
-			This is called task.
+		When we create a service, 
+			Docker creates a task for each containers on respective machines.
+			These inturn creates containers 
 		When we create a service, 
 			you define its optimal/desired state 
 				number of replicas

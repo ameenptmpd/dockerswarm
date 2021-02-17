@@ -1,5 +1,8 @@
-https://medium.com/aeturnuminc/configure-prometheus-and-grafana-in-dockers-ff2a2b51aa1d
+Preferably refer: Prometheus repo.
 
+References:
+
+https://medium.com/aeturnuminc/configure-prometheus-and-grafana-in-dockers-ff2a2b51aa1d
 https://prometheus.io/docs/guides/dockerswarm/
 
 using compose
@@ -10,6 +13,8 @@ https://blog.ruanbekker.com/blog/2019/09/05/deploy-a-monitoring-stack-on-docker-
 
 
 -------------------
+cd /etc/
+mkdir docker
 /etc/docker/daemon.json
 
 {
@@ -17,7 +22,7 @@ https://blog.ruanbekker.com/blog/2019/09/05/deploy-a-monitoring-stack-on-docker-
   "experimental" : true
 }
 
-or 
+or #worked for me - Vilas
 
 {
   "metrics-addr" : "0.0.0.0:9323",
@@ -26,6 +31,7 @@ or
 
 systemctl restart docker
 systemctl status docker
+systemctl enable docker
 
 http://<ip:9323>/metrics
 	would show lot of metrics
@@ -68,7 +74,14 @@ Docker image provided by prometheus to expose metrics like
 Besides some special volumes and command definitions
 	this service is always placed on a specific node.
 	
-	
+
+Prometheus architecture
+	Scrapper
+	Time series database
+		can apply rules
+			create metrics
+	Push to tools
+		like push to grafana	
 	
 -------------------------------------------
 https://prometheus.io/docs/prometheus/latest/getting_started/
@@ -91,51 +104,26 @@ https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.
 
 wget https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz
 
-
-Add a Prometheus user.
-
-	useradd --no-create-home --shell /bin/false prometheus
-
-Create needed directories.
-
-	mkdir /etc/prometheus
-	mkdir /var/lib/prometheus
-
-Change the owner of the above directories.
-
-chown prometheus:prometheus /etc/prometheus
-chown prometheus:prometheus /var/lib/prometheus
-
+curl -fsSL https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz -o prometheus.tar.gz
 
 Now go to Prometheus downloaded location and extract it.
 	tar -xvzf prometheus-2.23.0.linux-amd64.tar.gz
- 
-Rename it as per your preference.
-	mv prometheus-2.23.0.linux-amd64 prometheuspackage
+or
+	tar -xvzf prometheus.tar.gz
+	
+	cd prometheus-2.23.0.linux-amd64
+	./prometheus
+	
+	starts a server
+	access 
+		http://<ip>:9090/
+			status -> target
+		http://<ip>:9090/metrics
+			Look for promhttp_metric_handler_requests_total
+				Refresh and check the value of this.
 
-	Copy “prometheus” and “promtool” binary from the “prometheuspackage” folder to “/usr/local/bin”.
 
-	cp prometheuspackage/prometheus /usr/local/bin/
-	cp prometheuspackage/promtool /usr/local/bin/
-
-Change the ownership to Prometheus user.
-
-	chown prometheus:prometheus /usr/local/bin/prometheus
-	chown prometheus:prometheus /usr/local/bin/promtool
-
-Copy “consoles” and “console_libraries” directories from the “prometheuspackage” to “/etc/prometheus folder”
-	cp -r prometheuspackage/consoles /etc/prometheus
-	cp -r prometheuspackage/console_libraries /etc/prometheus
-
-Change the ownership to Prometheus user
-	chown -R prometheus:prometheus /etc/prometheus/consoles
-	chown -R prometheus:prometheus /etc/prometheus/console_libraries
-
-Add and modify Prometheus configuration file.
-
-Configurations should be added to the  “/etc/prometheus/prometheus.yml”
-
-Add
+Add the following docker-metrics into prometheus.yml inside prometheus-2.23.0.linux-amd64 folder
 -------------------
 global:
   scrape_interval: 10s
@@ -145,58 +133,124 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
       - targets: ['localhost:9090']
+  - job_name: 'docker-metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9323']	  
 ----------------
 -----------------------
-Change the ownership of the file.
-	chown prometheus:prometheus /etc/prometheus/prometheus.yml
-	
-	
-Configure the Prometheus Service File.
 
-vi /etc/systemd/system/prometheus.service	
+Following will convert prometheus into daemon.
 
----------------------------------------
+	Add a Prometheus user.
 
-[Unit]
-Description=Prometheus
-Wants=network-online.target
-After=network-online.target
+		useradd --no-create-home --shell /bin/false prometheus
+		#check if user is added
+		cat /etc/passwd
 
-[Service]
-User=prometheus
-Group=prometheus
-Type=simple
-ExecStart=/usr/local/bin/prometheus \
---config.file /etc/prometheus/prometheus.yml \
---storage.tsdb.path /var/lib/prometheus/ \
---web.console.templates=/etc/prometheus/consoles \
---web.console.libraries=/etc/prometheus/console_libraries
+	Create needed directories.
 
-[Install]
-WantedBy=multi-user.target
----------------------------------------
+		mkdir /etc/prometheus
+		mkdir /var/lib/prometheus
 
-Save and the exit file.
+	Change the owner of the above directories.
 
-	Reload the systemd service.
-		systemctl daemon-reload
+	chown prometheus:prometheus /etc/prometheus
+	chown prometheus:prometheus /var/lib/prometheus
 
-Start the Prometheus service.
-	systemctl start prometheus
-	systemctl enable prometheus
-	systemctl status prometheus
-Check service status.
+
+	 
+	Rename it as per your preference.
+		mv prometheus-2.23.0.linux-amd64 prometheuspackage
+
+		Copy “prometheus” and “promtool” binary from the “prometheuspackage” folder to “/usr/local/bin”.
+
+		cp prometheuspackage/prometheus /usr/local/bin/
+		cp prometheuspackage/promtool /usr/local/bin/
+
+	Change the ownership to Prometheus user.
+
+		chown prometheus:prometheus /usr/local/bin/prometheus
+		chown prometheus:prometheus /usr/local/bin/promtool
+
+	Copy “consoles” and “console_libraries” directories from the “prometheuspackage” to “/etc/prometheus folder”
+		cp -r prometheuspackage/consoles /etc/prometheus
+		cp -r prometheuspackage/console_libraries /etc/prometheus
+
+	Change the ownership to Prometheus user
+		chown -R prometheus:prometheus /etc/prometheus/consoles
+		chown -R prometheus:prometheus /etc/prometheus/console_libraries
+
+	Add and modify Prometheus configuration file.
+
+	Configurations should be added to the  “/etc/prometheus/prometheus.yml”
+
+	Add
+	-------------------
+	global:
+	  scrape_interval: 10s
+
+	scrape_configs:
+	  - job_name: 'prometheus_master'
+		scrape_interval: 5s
+		static_configs:
+		  - targets: ['localhost:9090']
+	  - job_name: 'docker-metrics'
+		scrape_interval: 5s
+		static_configs:
+		  - targets: ['localhost:9323']	  
+	----------------
+	-----------------------
+	Change the ownership of the file.
+		chown prometheus:prometheus /etc/prometheus/prometheus.yml
+		
+		
+	Configure the Prometheus Service File.
+
+	vi /etc/systemd/system/prometheus.service	
+
+	---------------------------------------
+
+	[Unit]
+	Description=Prometheus
+	Wants=network-online.target
+	After=network-online.target
+
+	[Service]
+	User=prometheus
+	Group=prometheus
+	Type=simple
+	ExecStart=/usr/local/bin/prometheus \
+	--config.file /etc/prometheus/prometheus.yml \
+	--storage.tsdb.path /var/lib/prometheus/ \
+	--web.console.templates=/etc/prometheus/consoles \
+	--web.console.libraries=/etc/prometheus/console_libraries
+
+	[Install]
+	WantedBy=multi-user.target
+	---------------------------------------
+
+	Save and the exit file.
+
+		Reload the systemd service.
+			systemctl daemon-reload
+
+	Start the Prometheus service.
+		systemctl start prometheus
+		systemctl enable prometheus
+		systemctl status prometheus
+	Check service status.
 
 	systemctl status prometheus
 
 
 	http://ip:9090/
 
-If required
-Add firewall rules.
+	If required
+	Add firewall rules.
 
-firewall-cmd --zone=public --add-port=9090/tcp --permanent
-systemctl reload firewalld
+	firewall-cmd --zone=public --add-port=9090/tcp --permanent
+	systemctl reload firewalld
 
 Reference: https://www.fosslinux.com/10398/how-to-install-and-configure-prometheus-on-centos-7.htm
 --------------------------------------------
@@ -226,7 +280,7 @@ sslverify=1
 sslcacert=/etc/pki/tls/certs/ca-bundle.crt
 -------------------------------------------
 
-	sudo yum install grafana
+	sudo yum install grafana -y
 
 
 Skipped installing following fonts
@@ -248,7 +302,7 @@ systemctl status grafana-server
 	Confirm that you updated /etc/docker/daemon.json
 	Restart docker
 	
-	http://ip:9323/metrics
+	http://<ip>:9323/metrics
 	
 ---------------------------
 vi prometheus.yml
