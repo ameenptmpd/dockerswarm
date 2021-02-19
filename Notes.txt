@@ -2,6 +2,28 @@
 Docker swarm
 	o	Swarm Introduction
 ----------------------------------------------------------------------------------------------------
+
+Why Orchestration
+	1. Service Discovery
+	2. Self healing
+		Container replacement
+	3. I will say :
+		Start 5 instance of my application
+	   Orchestrator:
+		Identify the nodes/machines where 5 containers/services comes up.
+		Schedule it on that node/machine
+			Something on the client machine should be know that it has to lauch your application
+		In all nodes
+			your application image should get downloaded
+			'N' number of containers should be created on all nodes 
+			Success should be communicated back to the client.
+	4. Seameless deployment
+		update 
+		rollback
+	5. IP address managment
+	6. Scale out/in application
+		
+
 Docker Swarm
 	Orchestration tool
 	Technique where we join multiple docker engines running on different hosts 
@@ -27,7 +49,7 @@ Docker Swarm
 				Declare a container as a service.
 		Create containers in respective machine.
 			This is called task.	
-					definition of the tasks to execute on the manager or worker nodes. 
+				definition of the tasks to execute on the manager or worker nodes. 
 			Central structure of the swarm system 
 			Primary root of user interaction with the swarm.
 

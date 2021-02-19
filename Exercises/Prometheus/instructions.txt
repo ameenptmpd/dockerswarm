@@ -245,6 +245,8 @@ Following will convert prometheus into daemon.
 
 
 	http://ip:9090/
+	http://ip:9090/metrics
+engine_daemon_container_states_containers{state="stopped"}
 
 	If required
 	Add firewall rules.

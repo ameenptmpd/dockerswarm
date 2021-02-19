@@ -24,7 +24,9 @@ Following ports needs to be open.
 1. docker swarm init --advertise-addr <server ip>
 	e.g. docker swarm init --advertise-addr 192.168.253.13
 	
-	on aws docker swarm init is good.
+	on aws 
+		docker swarm init 
+	is good.
 		
 		docker swarm join --token SWMTKN-1-3tcroz42ihzwl4r440itpw9rysew1r86f27hacz9un3k617twh-5u9lkmcuf8e5ase4px26nhoe6 192.168.253.25:2377
 
@@ -62,14 +64,21 @@ When a service is deployed/created to the swarm,
 		these tasks runs independently on all nodes. 
 		Each task will create an independent container in all nodes in the swarm.
 
-In the above example, a docker service with ubuntu image is created on all the swarm nodes with 2 replicas.
+In the above example, 
+	a docker service with nginx image is created on all the swarm nodes with 2 replicas.
 
-The command ‘docker service create --replicas 2 --name ubuntu_test ubuntu bash’
+The command 
+	‘docker service create --replicas 2 --name ubuntu_test ubuntu bash’
+	'docker service create -p 80:80 --name webserver nginx'
 
-docker service create : used to create a docker service in the swarm
---replicas 2 : will direct the docker engine to keep 2 replicas in the node machines
---name : flag used to instruct the name that is to be given to the service
-ubuntu_test : the name given to the service followed by name flag
+docker service create : 
+	used to create a docker service in the swarm
+--replicas 2 : 
+	will direct the docker engine to keep 2 replicas in the node machines
+--name : 
+	flag used to instruct the name that is to be given to the service
+ubuntu_test : 
+	the name given to the service followed by name flag
 ubuntu : the name of the docker image that is to be used (eg: centos, nginx, php etc.).
 bash : the command we wish to run in the container.
 
@@ -84,6 +93,9 @@ Issuing docker ps -a on the host machine will display all the services started i
 6. docker service ps webserver
 	Will show the list of tasks (These are not containers)
 	The first (ID) field there is Task ID and different from service id or container id.
+	
+	list service
+	docker service ls
 	
 	docker inspect <service id>
 	Shows the details of the task.
