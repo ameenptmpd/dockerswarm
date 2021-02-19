@@ -27,13 +27,15 @@ docker node ls
 	In real production have atleast 3 managers.
 	
 	
-3. 	
+3. 	For master node
 	docker node demote <Node>
 	
 
 4. docker node update --availability drain <Node>
 
 5. docker node update --availability active <Node>
+
+docker node rm <Node>
 
 N.B: drain strategy can be used for Converting Docker Manager like Kubernetes Manager
 		which doesn't entertain normal containers.
