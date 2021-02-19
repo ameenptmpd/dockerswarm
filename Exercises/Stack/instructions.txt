@@ -1,3 +1,5 @@
+Preferably refer : https://github.com/vilasvarghese/example-voting-app/
+
 docker stack deploy -c docker-compose.yml nginxtest
 
 docker stack ls 
