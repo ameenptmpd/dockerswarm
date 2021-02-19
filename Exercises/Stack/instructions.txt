@@ -1,3 +1,16 @@
+Preferably refer : https://github.com/vilasvarghese/example-voting-app/
+
+git clone https://github.com/vilasvarghese/example-voting-app/
+
+cd example-voting-app
+
+docker stack deploy --compose-file docker-stack.yml myvote #myvote is the name of the stack
+docker stack ls myvote
+docker stack ps	myvote
+docker stack rm	myvote
+docker stack services myvote
+
+
 docker stack deploy -c docker-compose.yml nginxtest
 
 docker stack ls 
