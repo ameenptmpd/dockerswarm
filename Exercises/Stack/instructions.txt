@@ -5,7 +5,7 @@ git clone https://github.com/vilasvarghese/example-voting-app/
 cd example-voting-app
 
 docker stack deploy --compose-file docker-stack.yml myvote #myvote is the name of the stack
-docker stack ls myvote
+docker stack ls
 docker stack ps	myvote
 docker stack rm	myvote
 docker stack services myvote
