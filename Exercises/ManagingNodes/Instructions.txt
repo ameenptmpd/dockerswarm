@@ -1,5 +1,5 @@
 1. docker node ls
-	Status
+	MANAGER STATUS
 		Blank : Worker node
 		Leader: Manager Node(Primary)
 			Multiple leaders not supported.
@@ -8,6 +8,9 @@
 			Passive node among active passive managers.
 			If leader becomes unavailable, then this will be promoted.
 			If there are multiple Reachable, then one among them will be randomnly picked up.
+		
+	AVAILABILITY
+		Active
 		Unavailable: Manager node that cannot communicate with other nodes
 			If active leader becomes unavailable.
 		Drain: Do not assign/create container
@@ -39,3 +42,7 @@ docker node rm <Node>
 
 N.B: drain strategy can be used for Converting Docker Manager like Kubernetes Manager
 		which doesn't entertain normal containers.
+
+The docker manager leader is selected using RAFT algorithm.
+There can be only one leader.
+We can demote the leader (to worker) try to make another node the leader.

@@ -12,7 +12,7 @@ Why Orchestration
 	   Orchestrator:
 		Identify the nodes/machines where 5 containers/services comes up.
 		Schedule it on that node/machine
-			Something on the client machine should be know that it has to lauch your application
+			Something on the client machine should know that it has to lauch your application
 		In all nodes
 			your application image should get downloaded
 			'N' number of containers should be created on all nodes 

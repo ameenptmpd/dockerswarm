@@ -51,7 +51,13 @@ To create an overlay network for use with swarm services, use a command like the
 	$ docker network create -d overlay my-overlay
 
 
-To create an overlay network which can be used by swarm services or standalone containers to communicate with other standalone containers running on other Docker daemons, add the --attachable flag:
+N.B:
+	To create an overlay network 
+		which can be used by swarm services 
+		or standalone containers to communicate with other standalone containers running on other Docker daemons, 
+		add the --attachable flag:
+		
+		So if you create an overlay network without --attachable, then containers will not able to connect.
 
 	$ docker network create -d overlay --attachable my-attachable-overlay
 
@@ -92,7 +98,13 @@ SWARM MODE OVERLAY NETWORKS AND STANDALONE CONTAINERS
 You can use the overlay network feature with both --opt encrypted --attachable and attach unmanaged containers to that network:
 
 	$ docker network create --opt encrypted --driver overlay --attachable my-attachable-multi-host-network
-
+	
+	
+	docker network create --driver=overlay --attachable core-infra #core-infra - name
+	docker network ls
+	docker service create --publish 80:80 --network=core-infra --name nginx nginx 
+	docker run --network=core-infra -it alpine:latest sh
+	docker network inspect core-infra
 
 Customize the default ingress network
 -------------------------------------
@@ -142,8 +154,11 @@ $ docker network create \
   --opt com.docker.network.driver.mtu=1200 \
   my-ingress
 
-Note: You can name your ingress network something other than ingress, but you can only have one. 
+Note: You can name your ingress network something other than ingress, but you can only have one ingress network. 
 An attempt to create a second one fails.
+In networking, 
+	maximum transmission unit (MTU) 
+		measurement representing the largest data packet that a network-connected device will accept. 
 
 Restart the services that you stopped in the first step.
 
@@ -177,6 +192,10 @@ Create or re-create the docker_gwbridge bridge manually with your custom setting
 	--opt com.docker.network.bridge.enable_icc=false \
 	--opt com.docker.network.bridge.enable_ip_masquerade=true \
 	docker_gwbridge
+
+
+Refer: https://dumlutimuralp.medium.com/docker-networking-intro-62d4bc163843 for more details	
+	
 Initialize or join the swarm. Since the bridge already exists, Docker does not create it with automatic settings.
 
 Operations for swarm services
