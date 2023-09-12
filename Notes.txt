@@ -17,12 +17,13 @@ Why Orchestration
 			your application image should get downloaded
 			'N' number of containers should be created on all nodes 
 			Success should be communicated back to the client.
-	4. Seameless deployment
+	4. Easy adn Seameless deployment
 		update 
 		rollback
 	5. IP address managment
 	6. Scale out/in application
-		
+	7. Load balancing among containers
+	8. A Layer of security
 
 Docker Swarm
 	Orchestration tool

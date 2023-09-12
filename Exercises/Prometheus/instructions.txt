@@ -84,35 +84,113 @@ Prometheus architecture
 		like push to grafana	
 	
 -------------------------------------------
-https://prometheus.io/docs/prometheus/latest/getting_started/
-https://www.fosslinux.com/10398/how-to-install-and-configure-prometheus-on-centos-7.htm
+Install prometheus on ubuntu 20.04
+Latest Reference: https://serverspace.io/support/help/install-prometheus-ubuntu-20-04/
 
-sudo su
-yum update -y
+sudo apt update && apt upgrade
+apt install nginx
+rm /etc/nginx/sites-enabled/default
+service nginx restart
+systemctl enable nginx.service
+groupadd prometheus
+useradd -s /sbin/nologin --system -g prometheus prometheus
+mkdir /var/lib/prometheus
+for i in rules rules.d files_sd; do sudo mkdir -p /etc/prometheus/${i}; done
+apt install curl
 
-vi /etc/sysconfig/selinux
-Change “SELINUX=enforcing” to “SELINUX=disabled”.
+mkdir -p /tmp/prometheus
+cd /tmp/prometheus
+curl -s https://api.github.com/repos/prometheus/prometheus/releases/latest | grep browser_download_url | grep linux-amd64 | cut -d '"' -f 4 | wget -qi -
+tar xvf prometheus*.tar.gz
 
-reboot
+Goto the prometheus directory 
+cd /tmp/prometheus/prometheus <tab>
+mv prometheus promtool /usr/local/bin/
 
-sudo su
-yum install wget -y
-
-go to https://prometheus.io/download/ 
-find the link to download like below
-https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz
-
-wget https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz
-
-curl -fsSL https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz -o prometheus.tar.gz
-
-Now go to Prometheus downloaded location and extract it.
-	tar -xvzf prometheus-2.23.0.linux-amd64.tar.gz
-or
-	tar -xvzf prometheus.tar.gz
+mv prometheus.yml /etc/prometheus/prometheus.yml
+mv consoles/ console_libraries/ /etc/prometheus/
+cat /etc/prometheus/prometheus.yml
+	some content should be present 
 	
-	cd prometheus-2.23.0.linux-amd64
-	./prometheus
+vi /etc/systemd/system/prometheus.service
+	add 
+
+>>add begin	
+[Unit]
+Description=Prometheus
+Documentation=https://prometheus.io/docs/introduction/overview/
+Wants=network-online.target
+After=network-online.target
+[Service]
+Type=simple
+User=prometheus
+Group=prometheus
+ExecReload=/bin/kill -HUP \$MAINPID
+ExecStart=/usr/local/bin/prometheus \
+--config.file=/etc/prometheus/prometheus.yml \
+--storage.tsdb.path=/var/lib/prometheus \
+--web.console.templates=/etc/prometheus/consoles \
+--web.console.libraries=/etc/prometheus/console_libraries \
+--web.listen-address=0.0.0.0:9090 \
+--web.external-url=
+
+
+SyslogIdentifier=prometheus
+Restart=always
+
+
+[Install]
+WantedBy=multi-user.target
+<<add end
+
+
+for i in rules rules.d files_sd; do sudo chown -R prometheus:prometheus /etc/prometheus/${i}; done
+for i in rules rules.d files_sd; do sudo chmod -R 775 /etc/prometheus/${i}; done
+chown -R prometheus:prometheus /var/lib/prometheus/
+
+systemctl daemon-reload
+systemctl enable prometheus
+
+try accessing <url>:9090
+
+
+
+	----------------------------------------------------
+	deprecated - need to try  
+	https://prometheus.io/docs/prometheus/latest/getting_started/
+	https://www.fosslinux.com/10398/how-to-install-and-configure-prometheus-on-centos-7.htm
+
+	sudo su
+	yum update -y
+
+	vi /etc/sysconfig/selinux
+	Change “SELINUX=enforcing” to “SELINUX=disabled”.
+
+	reboot
+
+	sudo su
+	yum install wget -y
+
+	go to https://prometheus.io/download/ 
+	find the link to download like below
+	https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz
+	https://github.com/prometheus/prometheus/releases/download/v2.47.0/prometheus-2.47.0.darwin-amd64.tar.gz
+
+	wget https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz
+		https://github.com/prometheus/prometheus/releases/download/v2.47.0/prometheus-2.47.0.dragonfly-amd64.tar.gz
+
+	curl -fsSL https://github.com/prometheus/prometheus/releases/download/v2.23.0/prometheus-2.23.0.linux-amd64.tar.gz -o prometheus.tar.gz
+
+	Now go to Prometheus downloaded location and extract it.
+		tar -xvzf prometheus-2.23.0.linux-amd64.tar.gz
+	or
+		tar -xvzf prometheus.tar.gz
+		
+		cd prometheus-2.23.0.linux-amd64
+		./prometheus
+	-------------------------------------------------------
+
+
 	
 	starts a server
 	access 
@@ -123,7 +201,7 @@ or
 				Refresh and check the value of this.
 
 
-Add the following docker-metrics into prometheus.yml inside prometheus-2.23.0.linux-amd64 folder
+Add the following docker-metrics into prometheus.yml inside "/etc/prometheus/prometheus.yml" folder
 -------------------
 global:
   scrape_interval: 10s
@@ -266,7 +344,11 @@ https://github.com/imixs/imixs-cloud/tree/master/management/monitoring
 
 
 ----------------------------------------------------------------------------------------------
-https://www.fosslinux.com/8328/how-to-install-and-configure-grafana-on-centos-7.htm
+Install on centos
+	https://grafana.com/docs/grafana/latest/setup-grafana/installation/redhat-rhel-fedora/
+	https://www.fosslinux.com/8328/how-to-install-and-configure-grafana-on-centos-7.htm
+Install on ubuntu
+	https://grafana.com/docs/grafana/latest/setup-grafana/installation/debian/
 
 vi /etc/yum.repos.d/grafana.repo
 
@@ -313,16 +395,77 @@ vi prometheus.yml
     static_configs:
     - targets: ['localhost:9323']
 ---------------------------------------	
-N.B: Instead of localhost if address is mentioned it should be like 123.123.123.123 (without protocol)
+N.B: Instead of localhost if address is mentioned it should be like 123.123.123.123 (without port?)
+
+
 
 	systemctl stop prometheus
 	./prometheus
-	
+-----------------
+
+Refer architecture: https://scoutapm.com/blog/prometheus-architecture
+
+Lab of Prometheus 
+------------------	
 	Refresh http://ip:9090/targets
 	There should be a second entry 
 		Both should become "UP"
 		
+Click on Status of Prometheus 
+	click on the 
+		- Configuration 
+		- Targets
+		- Service discosvery
 		
+		
+prometheus_exporter: 
+	This exporter is used to monitor the 
+		Prometheus server itself. 
+	It provides metrics about 
+		Prometheus server's performance
+			like 
+				number of active targets
+				scrape duration etc.		
+		
+		check http://IP:9100/metrics
+	Exporter documentation 
+		https://prometheus.io/docs/instrumenting/exporters/
+	Let's use 
+		Node/system metrics exporter
+			https://github.com/prometheus/node_exporter
+				use the docker compose provided below 
+				
+		cAdvisor
+			 VERSION=v0.36.0 # use the latest release version from https://github.com/google/cadvisor/releases
+			sudo docker run -d \
+			  --volume=/:/rootfs:ro \
+			  --volume=/var/run:/var/run:ro \
+			  --volume=/sys:/sys:ro \
+			  --volume=/var/lib/docker/:/var/lib/docker:ro \
+			  --volume=/dev/disk/:/dev/disk:ro \
+			  --publish=8080:8080 \
+			  --detach=true \
+			  --name=cadvisor \
+			  --privileged \
+			  --device=/dev/kmsg \
+			  gcr.io/cadvisor/cadvisor:$VERSION
+
+		check http://IP:8080/
+
+
+Add below config in prometheus.yml (/etc/prometheus/prometheus.yml)
+
+  - job_name: 'node_exporter'
+    static_configs:
+      - targets: ['localhost:9100']
+  - job_name: 'advisor'
+    static_configs:
+      - targets: ['localhost:8080']
+
+Prometheus lab ends 		
+-------------------------------------------------------------------------------------------		
+Grafana lab starts 
+
 Copy a query from http://IP:9323/metrics like
 
 engine_daemon_container_states_containers{state="stopped"}
@@ -334,8 +477,26 @@ Click on graph.
 Go to grafana http://ip:3000/
 admin/admin
 
+
+
 Link datasource
-Create - new - dashboard - new query
+	prometheus - 
+		type url: http://localhost:9090 (default is blank not this url)
+
+Create new dashboard 
+
+	- Back to dashboard 
+	- Click Dashboard 
+	- Select "Prometheus"
+	
+	- Right top "Time series" - can see lot of options different type of dashboard 
+		back to "Time series" 
+	- Left bottom " "Select metric"
+		- select "container_cpu_user_seconds_total"
+			or 
+		- container_memory_rss 
+ 	
+
 add the query from metrics server
 
 For e.g. 
@@ -343,5 +504,13 @@ go_gc_duration_seconds{quantile="0.75"}
 	or 
 engine_daemon_container_states_containers{state="stopped"}
 
-Click on back link 
-Save it 	
+
+https://grafana.com/grafana/dashboards/
+
+	Search for "node exporter full" 
+		Check "Get this dashboard" 
+			1860
+			
+	Back to "Grafana dashboard"
+		Search for "Import dashboard"
+		

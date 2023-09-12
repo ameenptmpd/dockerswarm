@@ -100,7 +100,8 @@ Issuing docker ps -a on the host machine will display all the services started i
 	docker inspect <service id>
 	Shows the details of the task.
 
-	If your container was created with port mapping (-p 80:80), then your container would be a part of subnet and gateway. It would by default connect to the overlay network.
+	If your container was created with port mapping (-p 80:80), then your container would be a part of subnet and gateway. 
+	It would by default connect to the overlay network.
 	
 
 7. Create multiple instance of a service

@@ -1,0 +1,65 @@
+Prometheus architecture
+
+Prometheus server
+	Data retriver
+		pulls metrics data
+	Time series database
+		stores metrics data
+	HTTP server 
+		accepts PromQL queries 
+	
+Prometheus can monitor various services /targets like
+	Linux/Windows server
+	Apache server
+	Single application
+	Services like db
+	etc
+	
+	
+The units monitored within those targets can differ
+	Linux/Windows server
+		cpu, memory, disk utilization
+		etc
+	Apache server
+		exception count, request count, request duration etc.
+	Single application
+	Services like db
+
+Human readable metrics are generated out of it
+	Metrics entries has
+		type 
+			3 metrics types
+				counter
+					e.g. number of container running
+				gauge
+					current status of some value
+					e.g. 
+					cpu utlization
+					memory utilization
+				histogram
+					how long or how big
+					
+		help 
+			description of the metrics
+			
+	
+Data retriver worker
+	pulls data over http 
+		from http://host-address/metrics endpoint
+	Each target should 
+		have /metrics endpoint
+		must be in correct format prometheus understands
+Exporter
+	For services which doesn't support "/metrics" endpoint
+	collects data 
+	converts it into a prometheus specific format
+	exposes it on "/metrics" endpoint
+	list of exporters already available for 
+		mysql
+		linux servers
+		cloud platforms
+		etc.
+		list can be found at https://prometheus.io/docs/instrumenting/exporters/
+		
+More details 
+https://prometheus.io/docs/introduction/overview/		
