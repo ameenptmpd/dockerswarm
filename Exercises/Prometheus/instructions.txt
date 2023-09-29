@@ -85,6 +85,7 @@ Prometheus architecture
 	
 -------------------------------------------
 Install prometheus on ubuntu 20.04
+----------------------------------
 Latest Reference: https://serverspace.io/support/help/install-prometheus-ubuntu-20-04/
 
 sudo apt update && apt upgrade
@@ -151,7 +152,7 @@ chown -R prometheus:prometheus /var/lib/prometheus/
 systemctl daemon-reload
 systemctl enable prometheus
 
-try accessing <url>:9090
+try accessing <url>:9090 -> IP:9090
 
 
 
@@ -507,6 +508,9 @@ engine_daemon_container_states_containers{state="stopped"}
 
 https://grafana.com/grafana/dashboards/
 
+To read the node metrics 
+	deploy nodeadvisor 
+	
 	Search for "node exporter full" 
 		Check "Get this dashboard" 
 			1860
@@ -514,3 +518,33 @@ https://grafana.com/grafana/dashboards/
 	Back to "Grafana dashboard"
 		Search for "Import dashboard"
 		
+		
+		
+To read the docker metrics 
+	deploy cAdvisor 
+	
+To deploy cadvisor
+
+VERSION=v0.36.0
+sudo docker run \
+  --volume=/:/rootfs:ro \
+  --volume=/var/run:/var/run:ro \
+  --volume=/sys:/sys:ro \
+  --volume=/var/lib/docker/:/var/lib/docker:ro \
+  --volume=/dev/disk/:/dev/disk:ro \
+  --publish=9055:8080 \
+  --detach=true \
+  --name=cadvisor \
+  --privileged \
+  --device=/dev/kmsg \
+  gcr.io/cadvisor/cadvisor:$VERSION
+  
+modify prometheus.yml to scrum from 
+  - job_name: 'advisor'
+    static_configs:
+      - targets: ['localhost:9055'] 
+	
+	and import below report 
+	Docker report 	
+		10619
+	Reference: https://grafana.com/grafana/dashboards/10619-docker-host-container-overview/

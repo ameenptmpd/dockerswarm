@@ -63,3 +63,1311 @@ Exporter
 		
 More details 
 https://prometheus.io/docs/introduction/overview/		
+
+
+
+---------------------------------------------------------------------------------------------------------------------------
+
+
+---------------------------------------------------------------------------------------------------	
+	• Monitor reliability through Prometheus & Grafana
+	---------------------------------------------------------------------------------------------------
+	-----------------------------------------------------------------------------------------
+	Install prometheus 
+		Prometheus download url 
+			https://prometheus.io/download/
+				modify operating system before copying the url
+				
+----------------------------------------------------------------------------------------------				
+			Preferably refer "Install prometheus on ubuntu 20.04" section in instructions.txt
+				----------------------------------
+			Latest Reference: https://serverspace.io/support/help/install-prometheus-ubuntu-20-04/
+----------------------------------------------------------------------------------------------
+
+	
+	sudo su
+	curl -L -o /opt/prometheus.tar.gz 	https://github.com/prometheus/prometheus/releases/download/v2.42.0/prometheus-2.42.0.linux-amd64.tar.gz
+	
+	cd /opt/
+	sudo tar xvfz prometheus.tar.gz 
+	cd prometheus-2.42.0.linux-amd64
+	./prometheus
+		listens on port 9090
+	
+	open port 9090
+	
+	-> up
+		Element o/p
+		instance 
+			comes from static_configs in config file
+		job=...
+			comes from job_name in config file
+	
+	-> status -> target
+		click link
+			data in the format prometheus understands
+				comma seperated labels {}
+
+
+access it on port 9000
+
+	up 
+		a special target
+		
+		up(instance="localhost:9090", job="prometheus")
+			localhost:9090: target
+				port where prometheus is running
+				self check
+			job="prometheus"
+				name of application
+				coming from job_name property in yml config. file
+
+	-----------------------------------------------------------------------------------------
+	
+	Monitoring distributed systems
+
+	Monitoring 
+		key attribute of SRE 
+		goal 
+			find out what is broken 
+			(or about to break) and 
+			why. 
+		Can the system heal itself?
+			is it automatic?
+			or manual?
+				is it a toil?
+					yes? can that be automated? what is the priority?
+		If a system cannot self-heal
+			SRE should investigate the 
+				alert, 
+				identify and 
+				mitigate the issues
+				determine the root cause. 
+		The priority metrics that SRE monitoring covers are:
+			Latency (refer below)
+			Traffic
+			Errors
+			Saturation
+	
+	
+			Latency(refer below):
+				delay/lag 
+					for data to travel 
+						from a source to a destination 
+							in a computer network or system. 
+					measured in milliseconds (ms) 
+					represents 
+						time for a request to be sent 
+							and a response to be received.
+				Example: 
+					In online gaming
+						latency can affect the responsiveness of player actions. 
+			Traffic:
+				data transmitted 
+					between devices or systems 
+						over a network. 
+				Includes all forms of data like	
+					web requests
+					file transfers
+					emails, and 
+					any other communication sent over the network.
+				Example: 
+					high traffic 
+						get large number of simultaneous user requests
+						can impact its performance and response times.
+			Errors:
+
+				instances where a system or process fails 
+					to perform a requested action correctly or as expected. 
+				various reasons
+					software bugs, 
+					hardware malfunctions, or 
+					incorrect user inputs.
+				Example: An error message displayed on a website when a user enters an invalid email address during the registration process.
+			Saturation:
+
+				a system or resource 
+					is operating at or near 
+						its maximum capacity and 
+						cannot handle additional load or requests efficiently. 
+				Effect: performance degradation or complete service unavailability.
+				Example: A server's CPU reaching saturation when it receives a sudden surge in requests, causing response times to slow down and potentially leading to service disruptions.
+				
+	
+	Prometheus
+	----------
+	
+	open-source systems alerting and monitoring toolkit. 
+	CNCF project
+	active user community 
+	analyze performance of application infrastructure 
+	Written in Go
+	Uses multi-dimensional data model
+		time-series data
+		identified by 
+			metric name
+			key/value pair
+		Uses PromQL
+			read-only and flexible query language
+			can aggregate labels stored in time series.
+		Don't use distributed storage
+			single server node
+		Default libraries for lot of different software 
+			e.g. 
+				windows
+				linux
+				mysql 
+					etc
+		Monitor custom services
+			can add instrumentation to our code
+				via
+					go
+					jaa
+		
+	Monitoring tools
+		collect/listen for events 
+			generally in time-series
+		Support for 
+			storage 
+				store the data collected
+			query
+		Graphical monitoring
+		
+	Other options
+		Grpahite
+		Influxdn
+		OpenTSDB
+		Nagios
+		Sensu
+	
+	Monitoring
+		systematic process of collecting and recording data in a target
+			analyzing 
+		can monitor 
+			machine centric 
+			or
+			serivices data
+	Alert/Alerting
+		Alerting Rules produces Alerts
+		Sent from prometheus to alert manager
+	AlertManager
+		takes alerts from Prometheus server
+			aggregates
+			de-duplicates
+			throttles
+		sends notification
+			emails
+			Pager
+			Slack 
+				etc.
+				
+	Target
+		definition of an object to scrape
+		an object whose metrics needs to be monitored.
+		
+	Instance
+		endpoint to scrape 
+		addresses to scrape
+		e.g. 192.168.1.1:8090
+	
+	Job
+		collection of targets/instances with same purpose
+		job: api-server
+			instance 
+				1: 192.168.1.1:5670
+				2: 192.168.1.2:5670
+	Sample
+		single value at a point in time in time series
+			e.g. http_requests_total {method="get"} 
+				count of http get request to a target
+		
+	architecture of prometheus
+		https://prometheus.io/docs/introduction/overview/	
+			multiple modes of graphing and dashboarding support
+			What are metrics ?
+			metrics are numeric measurements. 
+			Time series 
+				changes are recorded over time. 
+			can measure for e.g.
+				web server 
+					request times
+				for a database 
+					number of active connections or 
+					number of active queries 
+				etc.
+
+	Architectural discussion
+	------------------------
+	First, 
+		Prometheus scrapes data 
+			using (retriever) in Prometheus server 
+			and finds targets 
+				using the Service discovery. 
+		
+	scraped data is sent to the dashboard and 
+		processed using PromQL and 
+		sends alerts to the alert manager
+			notifies the user.
+	
+	
+
+
+	Prometheus Server
+	-----------------
+	
+		collects multi-dimensional data 
+			in time series and 
+			then analyzes and 
+			aggregates the collected data. 
+			
+		scraping:
+			The process of collecting metrics . 
+
+	Time series format 
+		data is collected after successive or fixed time intervals. 
+		access metrics 
+			using the metric names 
+			or 
+			optional key-value pairs. 
+		Labels 
+			used for distinguishing between various metrics. 
+			Use to drive some results based on a particular value. 
+		After doing some filters on collected metrics, you can make another time series.
+
+	E.g. 
+		HTTP requests of different URLs of your application. 
+		application level monitoring 
+			create metrics for each path like 
+				http_requests_login, 
+				http_requests_logout, 
+				http_requests_adduser, 
+				http_requests_comment 
+					
+			difficult to sum up. 
+		using labels, 
+			can make metrics by adding a path attribute like 
+				http_request__total(path=”/login”). 
+					fetch data for separate endpoints
+			for overall application
+				http_request__total().
+
+	The Prometheus server 
+		(mostly)automatically pulls metrics from the targets; 
+			user does not need to push metrics for analysis. 
+		We need to expose metrics 
+			such that Prometheus can access them. 
+		You just need to create an HTTP endpoint with /metrics
+			which returns the complete set of metrics.
+
+	In some cases pull doesn't work
+		e.g. short lived jobs
+		they can push to Pushgateway
+		
+	Either case
+		Prometheus retrieval will always pull
+		store it in time series db
+		Prometheus can also scrape data from another prometheus server.
+	
+
+	Prometheus Gateway
+	------------------
+	Prometheus server 
+		cannot not scrape some kinds of metrics
+		require extra mechanics. 
+	Prometheus Gateway 
+		intermediary source used for metrics 
+		from those jobs 
+			which can not be scraped by usual methods. 
+	--------------------------------------------------
+	Drawbacks of Prometheus Gateway:
+		While opening multiple instances 
+			through a Prometheus Gateway
+			can be single point of failure.
+		Prometheus automatic instance health monitoring 
+			not available.
+		push gateway 
+			always exposes the data collected 
+				to the Prometheus for any reason
+			We can not delete that information manually from the Gateway’s API.
+
+	Adv. of push gateway 
+		capture service-level batch jobs. 
+		A service-level batch job 
+			not semantically related to a particular job or machine
+		for e.g.
+			deleting the number from the entire system. 
+		This kind of metrics should not include machine or instance labels that decouple the lifecycle of specific machines or instances from the pushed metrics.
+	--------------------------------------------------
+	
+	Alertmanager
+	------------
+	manage alerts sent by the clients. 
+	It 
+		checks for supplication
+		groups the signals
+		routes them to the correct application 
+			like 
+				email, 
+				Pagerduty, 
+				Opsgenie, etc. 
+		It also checks for when it should keep alerts off and when not. 
+
+	Prometheus Server is the client 
+		sents message to Alertmanager.
+	Alertmanager		
+		group similar types of notifications 
+		prevent duplicate notifications 
+		supports muting notifications. 
+
+	
+	can configure in prometheus 
+		alerts related to the same type of instance 
+			compiled in a single alert 
+			sent to the alert manager. 
+
+Grouping
+--------
+	You may have noticed 
+		notifications from the same app 
+			often come as a single notification on your smartphone. 
+		This is called grouping. 
+		Grouping clubs the notifications of a single nature into a single notification. 
+
+	In Prometheus server
+		hundreds of notifications come at once
+		it may make the system fall 
+			as it has to fire hundreds of alerts simultaneously. 
+	Grouping converts 
+		similar type of notification into a single one 
+			reduces the server load. 
+	A routing tree in the configuration file controls the setting for grouping and their timing.
+
+Inhibition
+----------
+	Inhibition 
+		suppressing one notification 
+			when the other alerts are already firing. 
+		For example, 
+			an alert is firing
+				e.g. notifies that the cluster is not reachable. 
+		Alertmanger 
+			pause all the alerts related to this cluster 
+				prevent firing hundreds of alerts unrelated to the issue. 
+		The configuration file controls the properties of inhibition.
+
+Silence
+-------
+	Silence 
+		property that mutes the alerts for a particular time. 
+	Silence 
+		occurs with the help of matches
+			e.g. regex matching. 
+		The incoming alerts matched with the regular expression and properties of the previous alerts; 
+		if they do, then no notification will be sent to the system. 
+	Silence configures in the web interface of the Alertmanger.
+
+Configuring Alert Manager
+	For configuring Alertmanager to Prometheus
+		tell Prometheus 
+			how to communicate with the Alertmanager.  
+	For this, you have to add the following lines to the prometheus.yml file.
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - alertmanager:9093   # host:part
+Here you will provide the docker container name instead of localhost so that Prometheus Server can discover the alert manager via docker embedded DNS.
+
+Prometheus Targets
+------------------
+	Prometheus targets 
+		represent how Prometheus extracts metrics 
+			from a different resource. 
+	Mostly metrics are exposed by the services themselves
+		such as Kubernetes. 
+	Prometheus collects metrics directly. 
+	For unexposed services
+		Prometheus has to use exporters. 
+	Exporters are some programs that extract data from a service and then convert them into Prometheus formats. Here are some examples of the exports below:
+
+Hardware: Node/system
+HTTP: HAProxy, NGINX, Apache.
+APIs: Github, Docker Hub.
+Other monitoring systems: Cloudwatch.
+Databases: MySQL, Elasticsearch.
+Messaging systems: RabbitMQ, Kafka.
+Miscellaneous: Blackbox, JMX.
+In the multi-target export pattern, the metrics export via a network. They do not have to run on the parent machines of the metrics, and they can query from multiple targets. Blackbox and SNMP exporters use multi-target exporter patterns. 
+
+For configuring Prometheus targets to your server, you can use the following code:
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: eventservice
+    static_configs:
+      - targets: ["events:9090"]
+  - job_name: bookingservice
+    static_configs:
+      - targets: ["bookings:9090"]
+
+After adding those scripts
+	restart your Prometheus server 
+		by using docker container restart prometheus. 
+		After restarting, you will be able to see the new targets.
+
+Client Libraries
+-----------------
+	As we all know, Prometheus collects data in time-series formats that are multi-dimensional. So clients are always asked to send in this form specifically. But in most cases, metrics rules are not automatically written; instead, you need to add them manually. So for making metrics in Prometheus-compatible formats, there are two ways. It can be done manually on the client-side or use third-party exporters to convert data in Prometheus formats. When you control the client’s source code, you can go ahead with the first option; otherwise, second.
+
+	Prometheus provides various client libraries, some are official, and some are unofficial. If you can control the source code, client libraries provide the client-specific instrumentation and metrics collection. The client library sends the current state of all tracked metrics to the server whenever Prometheus scrapes your instances’ HTTP endpoint.
+
+	Client libraries are generally available for all of the major programming languages. In response to HTTP requests, client libraries take care of the details such as safety of the threads, bookkeeping, and the format of Prometheus text exposition. Since metrics-based monitoring does not monitor individual events, the more events you have, the more client library storage you use.
+
+	Client libraries are not restricted to text output metrics from Prometheus. It is an open ecosystem that can be used by the same APIs used for creating text format for the creation of metrics in another format or for feeding into other instruments.
+
+	Client libraries for instrumenting your own code are available in Go, Java/JVM, C#/.Net, Python, Ruby, Node.js, Haskell, Erlang, and Rust, among other prominent languages and runtimes. Software like Kubernetes and Docker already include Prometheus client libraries. There are hundreds of integrations available for third-party software that offers metrics in a non-Prometheus format. HAProxy, MySQL, PostgreSQL, Redis, JMX, SNMP, Consul, and Kafka are examples of exporters.
+
+Official client libraries:
+
+	Go
+	Java or Scala
+	Python
+	Ruby
+	Unofficial client libraries:
+
+	Bash
+	C
+	C++
+	Common Lisp
+	Dart
+	Elixir
+	Erlang
+	Haskell
+	Lua for Nginx
+	And much more
+
+Prometheus Exporters
+--------------------
+	most cases
+		metrics are self-exposed by the service. 
+		e.g. kubernetes
+		Prometheus automatically collects metrics. 
+	In other cases
+		Prometheus needs to scrape metrics. 
+		Exporters 
+			third-party tools 
+			help scrape metrics 
+				when it is not feasible to extract metrics directly. 
+		Some 
+			exporters are official
+			others are not.
+
+	Prometheus exporters 
+		can be of various categories 
+			database exporters
+			hardware related, 
+			issue trackers, 
+			storage, 
+			HTTP, 
+			APIs, 
+			logging, 
+			miscellaneous alert managers, and 
+			other official Prometheus exporters. 
+		Database exporters include 
+			Aerospike, 
+			Cickhouse, 
+			Couchbase, 
+			CouchDB, 
+			Druid, 
+			Elastic Search, 
+			etc. 
+		Hardware-related exporters include 
+			Accuse, 
+			Big-IP, 
+			Collins,  
+			Dell Hardware, etc.  
+		Other various third-party software like 
+			Ansible Tower, 
+			Caddy, 
+			CRG, 
+			Doorman, 
+			Etcd, 
+			Kubernetes, 
+			Midonet-Kubernetes, 
+			Xandikos, etc.
+
+	Various language-specific utilities 
+		not the exact exporters of Prometheus
+		use one of the exporters under the hood. 
+	For example
+		Iapetos is for Clojure, 
+		Gokit for Go
+		Jersey MetricsCollector for Java
+		Django-Prometheus for Python
+		Swagger-Stats for NodeJs.
+
+	Github hosts the majority of Prometheus exporters
+	can make our own exporters for instrumenting your code. 
+	While making your library, you should keep some general guidelines by Prometheus for instrumentation in mind.
+
+Service Discovery
+------------------
+	Prometheus Targets section
+		use static-config files 
+			to configure the dependencies manually. 
+	This process is ok for 
+		simple uses 
+			few instances
+			static instances 
+		with the config file
+	For dynamically adding and removing instances 	
+		Use service discovery 
+	Service discovery 
+		provide Prometheus 
+			what to escape in whichever database you want. 
+	Prometheus’ common service discovery resources are 
+		Consul, 
+		Amazon’s EC2, and 
+		Kubernetes out of the box. 
+
+	For non-supported source resources
+		use a file-based service discovery mechanism. 
+	can do using 
+		configuration management system like 
+			Ansible or 
+			Chef and 
+			pass the script containing a list of sources from which you want to pull data.
+
+Prometheus Data Visualization
+------------------------------------
+	Prometheus collects measurements and stores them locally in a time series database. A user can pick and aggregate existing time-series data in real-time using the Prometheus Query Language (PromQL). Prometheus Expression Browser can display the result as graphs or tabular data, or the data can feed an external visualization integration via an HTTP API. Grafana is the external integration of choice for Prometheus visualization.
+
+	A time series can be identified by a data model by its name and by an unordered set of key-value pairs known as labels. The PromQL query language supports aggregation across any of these labels, allowing you to look at data not just by process, but also by datacenter, service, and any other labels you've set up. 
+
+Security at Prometheus
+----------------------
+	The un-authorized on Prometheus 
+		have access to 
+			all time series data in the database
+			as well as a range of operational and debugging data. 
+	Only authorized people 
+		edit the command line
+		configuration file
+		rule files
+		other features of Prometheus' and 
+		other components' runtime environments.
+
+	The configuration file determines 
+		targets Prometheus scrapes, 
+		how often, and 
+		with what other settings. 
+	The administrator may 
+		employ data from service discovery systems
+			paired with relabeling
+			might give anyone with access to the data in that service discovery system some control.
+
+	Untrusted users may run scraped targets 
+		but cannot expose data 
+			that impersonates another target by default. 
+		The honor_labels option, as well as some relabeling setups, can disable this protection.
+
+	The data for sending alerts are accessible to anyone who has access to the Alertmanager's HTTP endpoint. They can create and resolve notifications, and they have the ability to create, modify, and eliminate silences.
+
+	The configuration file determines where notifications go. Notifications can wind up at an alert-defined destination with certain template setups. If the destination email address for notifications is an alert label, anyone who may submit alerts to the Alertmanager can send notifications to any email address.
+
+	There are many exporters that obtain their targets from URL parameters, such as the SNMP and Blackbox exporters. As a result, anyone with HTTP access to these exporters can force them to send queries to any endpoint they want. Because they also offer client-side authentication, secrets like HTTP Basic Auth passwords or SNMP community strings could be exposed. Security techniques like TLS and various authentication mechanisms are unable to cope with it.
+
+
+
+
+
+
+
+-----------------------------------------------------------------------------------------------
+UI walkthrough
+	The Prometheus UI:
+
+	Graphs and charts: 
+		create and customize 
+			graphs and charts 
+		display the metrics data collected by Prometheus. 
+		Users can select various 
+			time ranges
+			zoom in and out, 
+			change the type of graph or chart.
+
+	Alerts: 
+		alert system 
+		notify users when specific metrics exceed 
+			certain thresholds 
+		configure alerts 
+		receive notifications 
+			via email, Slack, or other means.
+
+	Querying: 
+		query the metrics data 
+			stored in Prometheus 
+				using PromQL, a powerful query language that provides a flexible and expressive way to query and manipulate time series data.
+
+	Target discovery and management: 
+		The UI also provides tools for discovering and managing targets, which are the systems and applications that Prometheus collects metrics data from. Users can add, remove, and monitor targets directly from the UI.
+
+	Visualization: 
+		The UI allows users to visualize the topology of their systems and applications using the Promethean topology visualization feature. This feature allows users to understand the relationships between different components of their systems and how they are performing.
+
+---------------------------------------------------------------------------------------------------
+						node exporters
+---------------------------------------------------------------------------------------------------
+image
+	
+	Linux system
+		^
+		|
+	----Exporter---------------------------------
+	|											|
+	|											|	
+	|	Gather data								|
+	|	Transfor data into correct format		|
+	|											|
+	----Exporter---------------------------------
+		|
+		V
+	Prometheus server
+		
+
+node exporters
+	software agents 
+	collect metrics from the target hosts 
+	make them available for scraping 
+		to Prometheus server. 
+	supports wide range of 
+		hosts and 
+		applications.
+
+	installed on the target hosts 
+		to be monitored. 
+	collect 
+		system-level metrics
+			CPU usage, 
+			memory usage, 
+			disk usage, 
+			network traffic
+		made available to Prometheus server for further processing and analysis.
+
+	operating systems supported  
+		Linux, 
+		Windows, and 
+		MacOS. 
+	platforms support include 
+		node_exporter for Linux systems 
+		wmi_exporter for Windows systems.
+
+	supports application specific monitoring 
+		e.g. 
+			PostgreSQL exporter 
+			Nginx exporter 
+			Kafka exporter 
+	
+	Further reference: 
+		https://prometheus.io/docs/instrumenting/exporters/
+
+Installation on linux
+-----------------------
+	download can be found in https://prometheus.io/download/#node_exporter
+	curl -L -o /opt/nodeexporter.tar.gz https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.linux-amd64.tar.gz
+	cd /opt/
+	tar xvfz nodeexporter.tar.gz
+	cd node..
+	./node...
+	
+	listens on port 9000
+	
+	add scrape into the yaml file
+	
+	
+
+Installation on windows
+-----------------------
+https://www.devopsschool.com/blog/how-to-install-windows-exporter-for-prometheus/
+	Not present in official documentation
+	search for wmi exporter
+		created by martin - github
+	https://github.com/prometheus-community/windows_exporter
+		releases
+			download latest
+		if defender is blocking
+			goto more info. and complete it
+	listens on port 9182
+	connect between linux and windows 
+		ping from linux to windows
+		windows-ip:9182
+		
+	configure the prometheus.yml file
+		query should now give "wmi...."
+---------------------------------------------------------------------------------------------------
+	• Lab Activity: Build Queries Using PromQL in Prometheus
+	---------------------------------------------------------------------------------------------------
+
+
+
+PromoQL
+
+	robust
+	extremely efficient 
+		language 
+			to survey Prometheus instances. 
+	can nest queries 
+		within each other
+	can filter quickly and get relevant data. 
+	query concisely
+		compared to other DSLs 
+			tied to other metrics tools.
+
+	Domain-specific language (DSL)
+		programming language with 
+			higher level of abstraction 
+			optimized for a specific class of problems
+	built on Go
+	similarity with other languages like SQL. 
+	Nested functional language (NFLs)
+		data appears as nested expressions 
+			within larger expressions. 
+		The outermost expression 
+			defines the final value
+			nested expressions 
+				represent values for arguments and operands.	
+		
+	Unlike SQL 
+		nested languages are 
+			not imperative
+			it is declarative languages 
+	PromQL/nesting languages
+		insert expressions or queries within other queries.
+
+	Each subquery 
+		produces a value 
+			acts as variable for the larger expressions. 
+	e.g.		
+		sum(rate(http_requests_total{job="prometheus"}[5d]
+
+
+	Prometheus Metric and Data Types
+		two kinds of “types” in Prometheus. 
+			metric types 
+			data types 
+				
+	Prometheus has four metric types: 
+		Counters
+		Gauges
+		Histograms 
+		Summaries 
+
+	Counters 
+		return absolute value of something
+			e.g. prometheus_http_requests_total or 
+			prometheus_sd_consul_rpc_duration_seconds_count. 
+		only count upward
+	gauges 
+		provide range of values. 
+	Histograms cover 
+		_sum, and 
+		_bucket.
+
+	summaries 
+		similar to histograms 
+		cover service level indicators 
+			gauge of histograms
+			
+			
+	PromQL subsequently has four data types:
+		Scalars or float literals(mostly scalars) 
+		Range vectors
+		Instant vectors
+		Time (though it’s often not counted in this category)
+
+	PromQL has 
+		two kinds of literals: 
+			strings and floats. 
+			
+	String 		
+	------
+		only string data is not used.
+		Can be a part of a query
+		Specify string literals with 
+			backticks, 
+			single quotes, or 
+			double quotes. 
+		Just like Golang — 
+			escape uses a backslash 
+			Any backslash within single or double quotes 
+				won’t function as an escape character.
+
+	Scalars or float literals 
+	-------------------------
+		Can be 
+			integers or 
+			floats
+				using regex.
+
+		Take the following PQL example:
+			filter for values in the 200s 
+				prometheus_http_requests_total{code=~"2.*", job="prometheus"}
+			filter for values in the 200s or 400s:
+				prometheus_http_requests_total{code=~"2.*|4.*"}
+			
+			OR operator
+			-----------
+			PromQL built-in "OR" operator "|"
+				
+			AND 
+			---
+			no operator for AND
+			comma seperated values
+			
+	Instant Vectors
+		queries 
+			by metric name. 
+			filter 
+				by referring to labels 
+					within curly brackets. 
+		Labels include 
+			vector matching to either 
+				ignore or consider certain keyword
+					both in 1:1 matches and many:one matches.
+
+		some_key {some_label="THATLABEL",another_label="THISLABEL"} [#value]
+		For a clearer example:
+		http_total_requests{job=”prometheus”, method=”post”, code=”404”} [5m]
+		Here are some other operators to know:
+
+		#Labels that don’t match to the string
+
+		access_log{job!=”apache2”}
+		#Labels with exact match to the string
+
+		http_total_requests{job=”prometheus”,method!=”GET”}
+		#For labels that don’t regex match the string
+
+		http_total_requests{job=!~".prom*"}
+		#Labels with exact regex match to the string
+
+		http_total_requests{job=~".prom*",environment=~”}
+-----------------------------------
+N.B: 
+	selectors and matchers
+	----------------------
+	selectors 
+		helps to filter {"job=~.prom*"} above
+			where clause in sql
+	matchers
+		4 types
+			=: 	equality matcher
+			!= 	negative equality matcher
+			=~	regular expression matcher
+				e.g. prometheus_http_requests_total{handler=~"/api.*|"}
+			!~	negative regular expression matcher
+				e.g. prometheus_http_requests_total{handler!~"/api.*|"}
+				
+-----------------------------------	
+		Instant queries for table views 
+			contain the PromQL expression and a timestamp. 
+		expression like [6h] 
+			shows metrics from the last six hours 
+			It can’t be used inversely. 
+			[-6h] not supported.
+
+
+	Range Vectors
+		select from a range 
+			within the instant that instant vectors select. 
+			
+		<<metric name>>{<<label>>=”<<value>>”}[duration]
+		
+		duration (like 5m - 5 minute) 
+			goes at the end of the vector. 
+		e.g. 
+			node_scrape_collector_duration_seconds{job=”node”}[2m]
+		
+		other supported time durations 
+			ms - milli seconds
+			s - seconds
+			m - minutes
+			h - hours
+			d - days
+			w - weeks
+			y - years
+			use days for months
+			
+		use offset method 
+			return results relative to a certain point in time.
+
+		For instance, ask for counters up until two days ago in this PromQL example:
+
+		http_requests_total offset 2d
+			should follow the selector 
+			can also be used on range vectors.
+
+		rate(http_requests_total[1h] offset 2d)
+		
+		also acquaint yourself with subqueries.
+
+	PromQL Feature Flags
+		Starting with v2.25,0, PromQL now includes a number of feature flags that you can activate. They’re also called Disabled Features, as you have to, as said before, activate them with a command.
+
+	That command follows this syntax:
+
+	--enable-feature=<name-of-the-feature>
+	Here’s the rundown of the new additions:
+
+	The @ Modifier
+	This lets you be extremely specific with the metrics you’re querying. 
+
+	It’s inactive by default, so activate it with the following command:
+
+	--enable-feature=promql-at-modifier
+	Add @ <timestamp> in front of the metric you’re querying to get what you want:
+
+	--enable-feature=promql-at-modifier @ 1623656380000)
+	Negative Offset
+	--enable-feature=promql-negative-offset
+	This lets you shift from a past metric value to a more recent one (essentially, instead of a back comparison, you shift closer to the present or future).
+
+	Remote Write Receiver
+	--enable-feature=remote-write-receiver
+	This lets you be extremely specific with the metrics you’re querying. 
+
+	Exemplar Storage
+	--enable-feature=promql-exemplar-storage
+	This lets you be extremely specific with the metrics you’re querying. 
+
+	Expand Environment Variables in External Labels
+	--enable-feature=expand-external-labels
+	This lets you be extremely specific with the metrics you’re querying. 
+
+	PromQL Subqueries
+		Prometheus supports a large number of functions, aggregation operators, and binary operators. Other features include hashed comments by line (like many other languages) and subqueries for instantaneous queries when triggered.  
+
+		Subqueries, a themselves a feature of PromQL’s nested expression capabilities, allow for some sophisticated querying. In memified terms, it’s a range query within a query.
+
+
+		You were thinking it too. You don’t need the last line. #predictable #promql #pimpmyqueries
+		Here, you can check the 4-minute rate of http requests, but also over the course of two hours, at a timestamp resolution of 30 seconds.
+
+	rate(http_requests_total[4m])[2h:30s]
+
+
+	PromQL Functions
+		Most things available in query syntax will be there in a function option, too, plus some other options.
+
+		Time and date functions, unlike with basic query syntax, might include months:
+			day_of_month() - Returns a specific date, ranging from 1 through 31.
+			days_in_month() - Returning the total number of days in a month: 28, 29, 30, or 31.
+			month() - Returns the number of the month, ranging from 1 through 12.
+			Copy
+			Also found are absolute value abs(); predicting the values of a time series based on a vector with predict_linear(); and options for aggregations over time (avg_over_time, max_over_time, stddev_over_time, etc.). Here’s a full list of PromQL functions (with the type of metric selectors they display):
+
+	 
+		abs(instant-vector)
+		absent(instant-vector)
+		absent_over_time(range-vector)
+		ceil(instant-vector)
+		changes(range-vector)
+		clamp_max(instant-vector, scalar)
+		clamp_min(instant-vector, scalar)
+		day_of_month(some vector(time()) instant-vector)
+		day_of_week(some vector(time()) instant-vector)
+		days_in_month(some vector(time()) instant-vector)
+		delta(range-vector) #for use with gauge metrics
+		deriv(range-vector) #for use with gauge metrics
+		exp(instant-vector)
+		floor(instant-vector)
+		histogram_quantile(scalar, instant-vector)
+		holt_winters(range-vector, scalar, scalar)
+		hour(some vector(time()) instant-vector)
+		idelta(range-vector)
+		increase(range-vector)
+		irate(range-vector)
+		label_join()
+		label_replace()
+		ln(instant-vector)
+		log2(instant-vector)
+		log10(instant-vector)
+		minute(some vector(time()) instant-vector)
+		month(some vector(time()) instant-vector)
+		predict_linear() #for use with gauge 
+		rate(range-vector)
+		resets(range-vector) #for use with counter metrics
+		round((instant-vector, to_nearest=## scalar)
+		scalar(instant-vector)
+		sort(instant-vector)
+		sort_desc()
+		sqrt(instant-vector)
+		time()
+		timestamp(instant-vector)
+		vector()
+		year(some vector(time()) instant-vector)
+		avg_over_time(range-vector)
+		min_over_time(range-vector)
+		max_over_time(range-vector)
+		sum_over_time(range-vector)
+		count_over_time(range-vector)
+		quantile_over_time(scalar, range-vector) #φ-quantile (0 ≤ φ ≤ 1) of an interval’s values
+		stddev_over_time(range-vector) #standard deviation
+		stdvar_over_time(range-vector) #standard variance
+
+
+		
+	https://prometheus.io/docs/prometheus/latest/querying/examples/	
+		Let's say we have a Prometheus instance collecting CPU usage data for a set of servers. The data is stored in the "cpu_usage" metric with labels for "server_name" and "cpu_core". We want to calculate the average CPU usage across all servers and cores over the last 5 minutes.
+
+	avg_over_time(cpu_usage[5m])
+
+		This query uses the avg_over_time() function to calculate the average CPU usage over the last 5 minutes for each server and core. The cpu_usage metric is specified with a time range selector of [5m] to only select data from the last 5 minutes. The resulting time series will have the same labels as the original metric.
+
+	We can further refine this query to get the average CPU usage across all servers and cores by removing the server_name and cpu_core labels:
+
+	avg_over_time(avg by (server_name) (avg_over_time(cpu_usage[5m])) without (cpu_core))	
+
+	This query first calculates the average CPU usage over the last 5 minutes for each server_name and cpu_core combination using the avg_over_time() function. It then calculates the average of those averages using the avg by() function, but excludes the cpu_core label using the without() function. The resulting time series will have only the server_name label and represent the average CPU usage across all cores of each server over the last 5 minutes.
+
+
+
+Operators
+---------
+	PromQL supports 2 operators
+		Binary operator
+			Arithmetic 
+			Comparison
+			Logical/set 
+		Aggregation operator
+
+	Binary
+		Arithmetic Operators
+			+ (add)
+			– (subtract)
+			* (multiply)
+			/ (divide)
+			% (percentage)
+			^ (exponents)
+
+				e.g. node_memory_Active_bytes / 8
+				
+		Comparison Binary Operators
+			== (equal to)
+			!= (does not equal)
+			> (greater than)
+			< (less than)
+			>= (greater than or equal to)
+			<= (less than or equal to)
+				e.g. 
+					process_open_fds > 12
+					node_cpu_seconds_total < 2000
+		Logical/set
+			build complex expression from 
+				simple relational expression
+			and 	(intersection)
+				e.g. 
+					prometheus_http_requests_total and promhttp_metric_handler_request_total
+						no data
+					
+			or 		(union)
+				e.g. 
+					prometheus_http_requests_total or promhttp_metric_handler_request_total
+			unless 	(complement)
+			
+		e.g. 
+			node_memory_MemTotal_bytes/1024/1024
+			
+			prometheus_http_requests_total * 2
+			node_cpu_seconds_total
+		
+	Aggregation Operators
+		sum 
+		avg
+		min 
+		max
+		group 
+		count 
+		count_values 
+		topk (k = the number of elements; 
+			this selects the largest values among those elements)
+		bottomk (like topk but for lowest values)
+		quantile (calculate a quantile over dimensions)
+		stddev (standard deviation over dimensions)
+		stdvar (standard variance over dimensions)
+
+	
+	ignore and on 
+	-------------
+	
+	
+---------------------------------------------------------------------------------------------------
+	• Lab Activity: Build Dashboards in Grafana
+	---------------------------------------------------------------------------------------------------
+	Sure, here are the high-level steps to build a dashboard in Grafana:
+
+1. 
+Connect Grafana to a data source: 
+	connect Grafana to a prometheus
+	
+	Grafana supports many data sources including
+		Prometheus
+		InfluxDB
+		Elasticsearch
+		etc.
+
+2. 
+Create a new dashboard: Once you've connected Grafana to your data source, you can create a new dashboard by clicking on the "Create" button in the left-hand menu and selecting "Dashboard".
+
+3. 
+Add panels: A panel is a visual representation of a metric or set of metrics. To add a panel, click on the "Add panel" button in the top-right corner of the dashboard editor and select the type of panel you want to create (e.g., graph, singlestat, table).
+
+4. 
+Configure the panel: Each panel has a set of configuration options that determine how the data is displayed. For example, you can specify the data source, the query used to retrieve the data, and the visualization options (e.g., line graph, bar chart). You can access the panel configuration options by clicking on the panel title and selecting "Edit".
+
+5. 
+Organize the dashboard: Once you've added one or more panels to your dashboard, you can organize them by rearranging their position, resizing them, and grouping them into rows or columns. You can also add text panels and other elements to provide context and annotations for your metrics data.
+
+6. 
+Save and share the dashboard: Once you've finished creating your dashboard, you can save it and share it with others. You can also set up alerts to notify you when certain metrics exceed predefined thresholds.
+
+
+
+---------------------------------------------------------------------------------------------------
+	• Lab Activity: Trigger Alerts Based on Error Budget
+	---------------------------------------------------------------------------------------------------
+	
+		Prometheus can trigger alerts based on error budgets by using the "Prometheus Operator" and its associated "Prometheus Alertmanager" component. The Prometheus Operator is an open-source tool for managing Prometheus instances and related resources in Kubernetes, and it includes built-in support for managing alerting rules and alerting configurations.
+
+To trigger alerts based on error budgets, you would need to do the following:
+
+1. Define your error budget: An error budget is a percentage of allowable errors for a given service or system, over a defined period of time. For example, you might set a goal of 99.9% uptime for a web application, which translates to a 0.1% error budget.
+
+2. Create a Prometheus query to calculate error rates: You will need to create a PromQL query that calculates the error rate for your service or system, based on the metrics that Prometheus is collecting. This query should be able to calculate the error rate over a specific time period, such as the past hour or day.
+
+3. Define an alerting rule based on the error budget: Using the Prometheus Alertmanager, you can create an alerting rule that triggers an alert when the error rate for your service or system exceeds the defined error budget. The rule should use the error rate query created in step 2, and should specify the error budget as a threshold value.
+
+4. Configure the alerting rule in the Prometheus Operator: Finally, you will need to configure the alerting rule in the Prometheus Operator, using a YAML configuration file. This file should specify the alerting rule and the Alertmanager configuration to use when sending alerts.
+
+Once you have configured the alerting rule, the Prometheus Operator will periodically evaluate the error rate query and trigger alerts when the error rate exceeds the defined error budget. The Alertmanager can then send notifications via various channels, such as email, Slack, or PagerDuty.
+
+By monitoring error budgets in this way, you can gain greater visibility into the reliability and performance of your services or systems, and ensure that you are meeting your service level objectives (SLOs).
+	
+	
+---------------------------------------------------------------------------------------------------
+	• Build full-stack observability
+	---------------------------------------------------------------------------------------------------
+	
+1. 	Deploy Prometheus to AWS: 
+	Direct deploy 
+	or on Amazon Elastic Kubernetes Service (EKS). 
+		create an EKS cluster 
+		deploy Prometheus to it using 
+			Helm or 
+			Prometheus Operator.
+
+2. Instrument your applications: 
+	To collect metrics 
+		instrument them 
+			use a client library or exporter 
+				expose metrics to Prometheus. 
+		Many popular programming languages and frameworks have Prometheus client libraries available, and there are also exporters available for various third-party services and systems.
+3. 
+ Configure Prometheus scraping: 
+	configure Prometheus to scrape the metrics
+		define scrape targets 
+			in a Prometheus configuration file 
+		or 
+			use Kubernetes annotations to auto-discover targets.
+4. 
+Set up alerting: 
+	use built-in alerting
+		set up alerts based on predefined rules or queries. 
+		configure alerts 
+			to send notifications to 
+				AWS services like Amazon 
+					SNS, 
+					Amazon SQS, or 
+					AWS Lambda.
+
+5. 
+Visualize metrics: 
+	To visualize your metrics data
+		use a tool like Grafana
+		integrate with Prometheus 
+		provides a variety of customizable dashboards and visualizations. 
+		
+6. 
+Store metrics data: 
+	To store your metrics data over a longer period of time
+		store time-series database 
+			like Amazon Timestream
+			
+	
+	prometheus + cloudwatch missed?
+
+
+	
+---------------------------------------------------------------------------------------------------
+	• Lab Activity: Instrument Prometheus Exporters
+	---------------------------------------------------------------------------------------------------
+	vilas
+	
+	Prometheus exporters are software components that collect metrics from various systems and services and expose them in a format that Prometheus can scrape. To instrument a Prometheus exporter, you will need to perform the following steps:
+
+Choose an appropriate exporter: Prometheus has a wide range of exporters available for various systems and services, including databases, web servers, messaging systems, and more. Choose an exporter that is appropriate for the system or service you want to monitor.
+
+Install the exporter: Install the exporter on the system or service you want to monitor. This may involve installing software packages or running a containerized version of the exporter.
+
+Configure the exporter: Most exporters require some configuration to determine what metrics to scrape and how to expose them. Refer to the exporter documentation for specific configuration options.
+
+Test the exporter: Use the exporter's built-in metrics endpoint to test that it is correctly exposing metrics in a format that Prometheus can scrape. You can use a tool like curl or a web browser to access the metrics endpoint.
+
+Configure Prometheus: Configure Prometheus to scrape the metrics exposed by the exporter. This typically involves adding a scrape target to the Prometheus configuration file, which specifies the exporter's URL and any required authentication or authorization credentials.
+
+Create Prometheus queries: Once Prometheus is scraping the exporter's metrics, you can create queries to retrieve and visualize the data. Use PromQL to query the scraped metrics and aggregate them in ways that are meaningful for your use case.
+
+Set up alerting: Finally, you can set up alerts based on the scraped metrics. Define alerting rules using PromQL expressions, and configure Prometheus Alertmanager to send notifications when alerts are triggered.
+
+By instrumenting Prometheus exporters, you can extend Prometheus' monitoring capabilities to a wide range of systems and services, and gain greater visibility into the health and performance of your infrastructure.
+
+
+
+
+	
+	end vilas
+	
+	
+	
+---------------------------------------------------------------------------------------------------
+	• Lab Activity: Generate Logs, Traces, Metrics
+	---------------------------------------------------------------------------------------------------
+	vilas
+	
+	Prometheus is primarily designed to collect and store metrics, but it can also be used to generate logs and traces. Here are some ways to generate logs, traces, and metrics using Prometheus:
+
+Instrument your code: To generate metrics, you will need to instrument your code using a Prometheus client library. Most programming languages have client libraries available that make it easy to expose custom metrics. To generate logs and traces, you can use a logging framework or tracing library that integrates with Prometheus.
+
+Define metrics: Define the metrics you want to collect and expose in your Prometheus configuration file. This file specifies the metrics endpoint that Prometheus should scrape and any additional configuration options.
+
+Generate logs: To generate logs, you can use a logging framework like Logback or Log4j that supports the generation of structured logs. Structured logs are easier to parse and analyze than unstructured logs.
+
+Generate traces: To generate traces, you can use a tracing library like OpenTracing or Jaeger that supports the generation of distributed traces. Distributed traces allow you to visualize the flow of requests through your system and identify bottlenecks and other performance issues.
+
+Collect metrics: Prometheus automatically collects metrics from the metrics endpoint you defined in your configuration file. You can use the Prometheus query language (PromQL) to query and aggregate the collected metrics and create custom dashboards to visualize them.
+
+Analyze logs and traces: Prometheus is not designed to store logs and traces, but you can use tools like Elasticsearch or Splunk to collect and analyze your logs and traces. These tools can be configured to extract metrics from logs and traces and integrate them with Prometheus.
+
+By generating logs, traces, and metrics using Prometheus, you can gain greater visibility into the health and performance of your applications and infrastructure. With a comprehensive observability solution that includes Prometheus, you can quickly identify and troubleshoot issues before they become major problems.
+	end vilas
+	
+	
+	
+---------------------------------------------------------------------------------------------------
